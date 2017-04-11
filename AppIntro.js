@@ -10,6 +10,7 @@ import {
   Dimensions,
   Image,
   Platform,
+  I18nManager,
 } from 'react-native';
 import Swiper from 'react-native-swiper';
 import DoneButton from './components/DoneButton';
@@ -57,8 +58,8 @@ const defaulStyles = {
   },
   dotStyle: {
     backgroundColor: 'rgba(255,255,255,.3)',
-    width: 13,
-    height: 13,
+    width: 11,
+    height: 11,
     borderRadius: 7,
     marginLeft: 7,
     marginRight: 7,
@@ -80,8 +81,8 @@ const defaulStyles = {
     backgroundColor: 'transparent',
   },
   dotContainer: {
-    flex: 0.6,
-    flexDirection: 'row',
+    flex: 0.2,
+    flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -119,6 +120,7 @@ export default class AppIntro extends Component {
   }
 
   onNextBtnClick = (context) => {
+    if(I18nManager.isRTL) { return; }
     if (context.state.isScrolling || context.state.total < 2) return;
     const state = context.state;
     const diff = (context.props.loop ? 1 : 0) + 1 + context.state.index;
@@ -189,7 +191,8 @@ export default class AppIntro extends Component {
   renderPagination = (index, total, context) => {
     let isDoneBtnShow;
     let isSkipBtnShow;
-    if (index === total - 1) {
+    let end = I18nManager.isRTL? 0 : (total-1);
+    if (index === end) {
       this.setDoneBtnOpacity(1);
       this.setSkipBtnOpacity(0);
       this.setNextOpacity(0);
@@ -212,10 +215,12 @@ export default class AppIntro extends Component {
           onSkipBtnClick={() => this.props.onSkipBtnClick(index)} /> :
           <View style={this.styles.btnContainer} />
         }
-        {this.props.showDots && RenderDots(index, total, {
-          ...this.props,
-          styles: this.styles
-        })}
+        <View style={this.styles.dotContainer}>
+          {this.props.showDots && RenderDots(index, total, {
+            ...this.props,
+            styles: this.styles
+          })}
+        </View>
         {this.props.showDoneButton ? <DoneButton
             {...this.props}
             {...this.state}
@@ -302,7 +307,10 @@ export default class AppIntro extends Component {
   }
 
   render() {
-    const childrens = this.props.children;
+    let childrens = this.props.children;
+    if(I18nManager.isRTL) {
+      childrens = childrens.slice().reverse();
+    }
     const { pageArray } = this.props;
     let pages = [];
     let androidPages = null;
@@ -341,7 +349,8 @@ export default class AppIntro extends Component {
         {androidPages}
         <Swiper
           loop={false}
-          index={this.props.defaultIndex}
+          style={{flexDirection:I18nManager.isRTL? 'row-reverse':'row'}}
+          index={I18nManager.isRTL ? this.props.children.length : this.props.defaultIndex}
           renderPagination={this.renderPagination}
           onMomentumScrollEnd={(e, state) => {
             if (this.isToTintStatusBar()) {
@@ -402,7 +411,7 @@ AppIntro.defaultProps = {
   onNextBtnClick: () => {},
   doneBtnLabel: 'Done',
   skipBtnLabel: 'Skip',
-  nextBtnLabel: '›',
+  nextBtnLabel: I18nManager.isRTL? '‹':'›',
   defaultIndex: 0,
   showSkipButton: true,
   showDoneButton: true,
